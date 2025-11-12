@@ -45,6 +45,27 @@ blocks:
     coordinate: [184, 12]
     rotation: 0
     state: enabled
+- name: variable_qtgui_range_0
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: ''
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0'
+    step: '1'
+    stop: '100'
+    value: '50'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [408, 12.0]
+    rotation: 0
+    state: enabled
 - name: window_size
   id: variable
   parameters:
@@ -55,6 +76,27 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [296, 12.0]
+    rotation: 0
+    state: disabled
+- name: window_size
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: ''
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: int
+    start: '10'
+    step: '1'
+    stop: '100'
+    value: '48'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [568, 12.0]
     rotation: 0
     state: enabled
 - name: blocks_complex_to_mag_0
@@ -149,7 +191,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: /home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample1_20MHz_Channel36.bin
+    file: /home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample3_20MHz_Channel100.bin
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -161,9 +203,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [96, 292.0]
+    coordinate: [872, 564.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: blocks_multiply_xx_0
   id: blocks_multiply_xx
   parameters:
@@ -218,6 +260,37 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [888, 412.0]
+    rotation: 0
+    state: enabled
+- name: iio_pluto_source_0
+  id: iio_pluto_source
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '20000000'
+    bbdc: 'True'
+    buffer_size: '32768'
+    comment: ''
+    filter: ''
+    filter_source: '''Auto'''
+    fpass: '0'
+    frequency: '5220000000'
+    fstop: '0'
+    gain1: '''manual'''
+    len_tag_key: packet_len
+    manual_gain1: variable_qtgui_range_0
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    quadrature: 'True'
+    rfdc: 'True'
+    samplerate: samp_rate
+    type: fc32
+    uri: ip:192.168.2.1
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [96, 244.0]
     rotation: 0
     state: enabled
 - name: qtgui_time_sink_x_0
@@ -324,12 +397,12 @@ connections:
 - [blocks_conjugate_cc_0, '0', blocks_multiply_xx_0, '0']
 - [blocks_delay_0, '0', blocks_conjugate_cc_0, '0']
 - [blocks_divide_xx_0, '0', qtgui_time_sink_x_0, '0']
-- [blocks_file_source_0, '0', blocks_complex_to_mag_squared_0, '0']
-- [blocks_file_source_0, '0', blocks_delay_0, '0']
-- [blocks_file_source_0, '0', blocks_multiply_xx_0, '1']
 - [blocks_multiply_xx_0, '0', fir_filter_xxx_0, '0']
 - [fir_filter_xxx_0, '0', blocks_complex_to_mag_0, '0']
 - [fir_filter_xxx_0_0, '0', blocks_divide_xx_0, '1']
+- [iio_pluto_source_0, '0', blocks_complex_to_mag_squared_0, '0']
+- [iio_pluto_source_0, '0', blocks_delay_0, '0']
+- [iio_pluto_source_0, '0', blocks_multiply_xx_0, '1']
 
 metadata:
   file_format: 1
