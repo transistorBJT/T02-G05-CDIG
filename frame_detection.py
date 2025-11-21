@@ -12,6 +12,7 @@ from PyQt5 import Qt
 from gnuradio import qtgui
 from PyQt5 import QtCore
 from gnuradio import blocks
+import pmt
 from gnuradio import filter
 from gnuradio.filter import firdes
 from gnuradio import gr
@@ -22,7 +23,6 @@ from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-from gnuradio import iio
 import sip
 
 
@@ -124,21 +124,13 @@ class frame_detection(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
-        self.iio_pluto_source_0 = iio.fmcomms2_source_fc32('ip:192.168.2.1' if 'ip:192.168.2.1' else iio.get_pluto_uri(), [True, True], 32768)
-        self.iio_pluto_source_0.set_len_tag_key('packet_len')
-        self.iio_pluto_source_0.set_frequency(5220000000)
-        self.iio_pluto_source_0.set_samplerate(samp_rate)
-        self.iio_pluto_source_0.set_gain_mode(0, 'manual')
-        self.iio_pluto_source_0.set_gain(0, variable_qtgui_range_0)
-        self.iio_pluto_source_0.set_quadrature(True)
-        self.iio_pluto_source_0.set_rfdc(True)
-        self.iio_pluto_source_0.set_bbdc(True)
-        self.iio_pluto_source_0.set_filter_params('Auto', '', 0, 0)
         self.fir_filter_xxx_0_0 = filter.fir_filter_fff(1, [1]*window_size)
         self.fir_filter_xxx_0_0.declare_sample_delay(0)
         self.fir_filter_xxx_0 = filter.fir_filter_ccc(1, [1]*window_size)
         self.fir_filter_xxx_0.declare_sample_delay(0)
         self.blocks_multiply_xx_0 = blocks.multiply_vcc(1)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample3_20MHz_Channel100.bin', False, 0, 0)
+        self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
         self.blocks_divide_xx_0 = blocks.divide_ff(1)
         self.blocks_delay_0 = blocks.delay(gr.sizeof_gr_complex*1, 16)
         self.blocks_conjugate_cc_0 = blocks.conjugate_cc()
@@ -154,12 +146,12 @@ class frame_detection(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_conjugate_cc_0, 0), (self.blocks_multiply_xx_0, 0))
         self.connect((self.blocks_delay_0, 0), (self.blocks_conjugate_cc_0, 0))
         self.connect((self.blocks_divide_xx_0, 0), (self.qtgui_time_sink_x_0, 0))
+        self.connect((self.blocks_file_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
+        self.connect((self.blocks_file_source_0, 0), (self.blocks_delay_0, 0))
+        self.connect((self.blocks_file_source_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.blocks_multiply_xx_0, 0), (self.fir_filter_xxx_0, 0))
         self.connect((self.fir_filter_xxx_0, 0), (self.blocks_complex_to_mag_0, 0))
         self.connect((self.fir_filter_xxx_0_0, 0), (self.blocks_divide_xx_0, 1))
-        self.connect((self.iio_pluto_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
-        self.connect((self.iio_pluto_source_0, 0), (self.blocks_delay_0, 0))
-        self.connect((self.iio_pluto_source_0, 0), (self.blocks_multiply_xx_0, 1))
 
 
     def closeEvent(self, event):
@@ -183,14 +175,12 @@ class frame_detection(gr.top_block, Qt.QWidget):
 
     def set_variable_qtgui_range_0(self, variable_qtgui_range_0):
         self.variable_qtgui_range_0 = variable_qtgui_range_0
-        self.iio_pluto_source_0.set_gain(0, self.variable_qtgui_range_0)
 
     def get_samp_rate(self):
         return self.samp_rate
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.iio_pluto_source_0.set_samplerate(self.samp_rate)
         self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
 
 
