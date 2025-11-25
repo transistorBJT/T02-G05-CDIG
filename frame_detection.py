@@ -13,16 +13,20 @@ from gnuradio import qtgui
 from PyQt5 import QtCore
 from gnuradio import blocks
 import pmt
+from gnuradio import fft
+from gnuradio.fft import window
 from gnuradio import filter
 from gnuradio.filter import firdes
 from gnuradio import gr
-from gnuradio.fft import window
 import sys
 import signal
 from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+from gnuradio import network
+import foo
+import ieee802_11
 import sip
 
 
@@ -76,6 +80,41 @@ class frame_detection(gr.top_block, Qt.QWidget):
         self._variable_qtgui_range_0_range = qtgui.Range(0, 100, 1, 50, 200)
         self._variable_qtgui_range_0_win = qtgui.RangeWidget(self._variable_qtgui_range_0_range, self.set_variable_qtgui_range_0, "'variable_qtgui_range_0'", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._variable_qtgui_range_0_win)
+        self.qtgui_waterfall_sink_x_0 = qtgui.waterfall_sink_c(
+            1024, #size
+            window.WIN_BLACKMAN_hARRIS, #wintype
+            5.89e9, #fc
+            20e6, #bw
+            "", #name
+            1, #number of inputs
+            None # parent
+        )
+        self.qtgui_waterfall_sink_x_0.set_update_time(0.10)
+        self.qtgui_waterfall_sink_x_0.enable_grid(False)
+        self.qtgui_waterfall_sink_x_0.enable_axis_labels(True)
+
+
+
+        labels = ['', '', '', '', '',
+                  '', '', '', '', '']
+        colors = [0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+                  1.0, 1.0, 1.0, 1.0, 1.0]
+
+        for i in range(1):
+            if len(labels[i]) == 0:
+                self.qtgui_waterfall_sink_x_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_waterfall_sink_x_0.set_line_label(i, labels[i])
+            self.qtgui_waterfall_sink_x_0.set_color_map(i, colors[i])
+            self.qtgui_waterfall_sink_x_0.set_line_alpha(i, alphas[i])
+
+        self.qtgui_waterfall_sink_x_0.set_intensity_range(-140, 10)
+
+        self._qtgui_waterfall_sink_x_0_win = sip.wrapinstance(self.qtgui_waterfall_sink_x_0.qwidget(), Qt.QWidget)
+
+        self.top_layout.addWidget(self._qtgui_waterfall_sink_x_0_win)
         self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
             512, #size
             samp_rate, #samp_rate
@@ -124,14 +163,27 @@ class frame_detection(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
+        self.network_socket_pdu_0 = network.socket_pdu('TCP_SERVER', '', '52001', 10000, False)
+        self.ieee802_11_sync_short_0 = ieee802_11.sync_short(0.8, 2, False, False)
+        self.ieee802_11_sync_long_0 = ieee802_11.sync_long(240, False, False)
+        self.ieee802_11_parse_mac_0 = ieee802_11.parse_mac(False, False)
+        self.ieee802_11_frame_equalizer_0 = ieee802_11.frame_equalizer(0, 5.89e9, 10e6, False, False)
+        self.ieee802_11_decode_mac_0 = ieee802_11.decode_mac(False, False)
+        self.foo_wireshark_connector_0 = foo.wireshark_connector(127, False)
         self.fir_filter_xxx_0_0 = filter.fir_filter_fff(1, [1]*window_size)
         self.fir_filter_xxx_0_0.declare_sample_delay(0)
         self.fir_filter_xxx_0 = filter.fir_filter_ccc(1, [1]*window_size)
         self.fir_filter_xxx_0.declare_sample_delay(0)
+        self.fft_vxx_0 = fft.fft_vcc(64, True, window.rectangular(64), True, 1)
+        self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, 64)
         self.blocks_multiply_xx_0 = blocks.multiply_vcc(1)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample3_20MHz_Channel100.bin', False, 0, 0)
+        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_cc(0.1*variable_qtgui_range_0)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample1_20MHz_Channel36.bin', False, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/home/dcastro/projeto_cdig/captures/captura1.pcap', False)
+        self.blocks_file_sink_0.set_unbuffered(False)
         self.blocks_divide_xx_0 = blocks.divide_ff(1)
+        self.blocks_delay_1 = blocks.delay(gr.sizeof_gr_complex*1, 240)
         self.blocks_delay_0 = blocks.delay(gr.sizeof_gr_complex*1, 16)
         self.blocks_conjugate_cc_0 = blocks.conjugate_cc()
         self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(1)
@@ -141,17 +193,33 @@ class frame_detection(gr.top_block, Qt.QWidget):
         ##################################################
         # Connections
         ##################################################
+        self.msg_connect((self.ieee802_11_decode_mac_0, 'out'), (self.ieee802_11_parse_mac_0, 'in'))
+        self.msg_connect((self.ieee802_11_parse_mac_0, 'out'), (self.foo_wireshark_connector_0, 'in'))
+        self.msg_connect((self.ieee802_11_parse_mac_0, 'out'), (self.network_socket_pdu_0, 'pdus'))
         self.connect((self.blocks_complex_to_mag_0, 0), (self.blocks_divide_xx_0, 0))
         self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.fir_filter_xxx_0_0, 0))
         self.connect((self.blocks_conjugate_cc_0, 0), (self.blocks_multiply_xx_0, 0))
         self.connect((self.blocks_delay_0, 0), (self.blocks_conjugate_cc_0, 0))
+        self.connect((self.blocks_delay_0, 0), (self.ieee802_11_sync_short_0, 0))
+        self.connect((self.blocks_delay_1, 0), (self.ieee802_11_sync_long_0, 1))
+        self.connect((self.blocks_divide_xx_0, 0), (self.ieee802_11_sync_short_0, 2))
         self.connect((self.blocks_divide_xx_0, 0), (self.qtgui_time_sink_x_0, 0))
         self.connect((self.blocks_file_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
         self.connect((self.blocks_file_source_0, 0), (self.blocks_delay_0, 0))
+        self.connect((self.blocks_file_source_0, 0), (self.blocks_multiply_const_vxx_0, 0))
         self.connect((self.blocks_file_source_0, 0), (self.blocks_multiply_xx_0, 1))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
         self.connect((self.blocks_multiply_xx_0, 0), (self.fir_filter_xxx_0, 0))
+        self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_0, 0))
+        self.connect((self.fft_vxx_0, 0), (self.ieee802_11_frame_equalizer_0, 0))
         self.connect((self.fir_filter_xxx_0, 0), (self.blocks_complex_to_mag_0, 0))
+        self.connect((self.fir_filter_xxx_0, 0), (self.ieee802_11_sync_short_0, 1))
         self.connect((self.fir_filter_xxx_0_0, 0), (self.blocks_divide_xx_0, 1))
+        self.connect((self.foo_wireshark_connector_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.ieee802_11_frame_equalizer_0, 0), (self.ieee802_11_decode_mac_0, 0))
+        self.connect((self.ieee802_11_sync_long_0, 0), (self.blocks_stream_to_vector_0, 0))
+        self.connect((self.ieee802_11_sync_short_0, 0), (self.blocks_delay_1, 0))
+        self.connect((self.ieee802_11_sync_short_0, 0), (self.ieee802_11_sync_long_0, 0))
 
 
     def closeEvent(self, event):
@@ -175,6 +243,7 @@ class frame_detection(gr.top_block, Qt.QWidget):
 
     def set_variable_qtgui_range_0(self, variable_qtgui_range_0):
         self.variable_qtgui_range_0 = variable_qtgui_range_0
+        self.blocks_multiply_const_vxx_0.set_k(0.1*self.variable_qtgui_range_0)
 
     def get_samp_rate(self):
         return self.samp_rate
