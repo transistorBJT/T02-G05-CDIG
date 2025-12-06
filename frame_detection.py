@@ -24,7 +24,6 @@ from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-from gnuradio import network
 import foo
 import ieee802_11
 import sip
@@ -128,13 +127,12 @@ class frame_detection(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
-        self.network_socket_pdu_0 = network.socket_pdu('TCP_SERVER', '', '52001', 10000, False)
         self.ieee802_11_sync_short_0 = ieee802_11.sync_short(0.8, 2, False, False)
         self.ieee802_11_sync_long_0 = ieee802_11.sync_long(240, False, False)
         self.ieee802_11_parse_mac_0 = ieee802_11.parse_mac(False, False)
         self.ieee802_11_frame_equalizer_0 = ieee802_11.frame_equalizer(3, 5.89e9, 10e6, False, False)
-        self.ieee802_11_decode_mac_0 = ieee802_11.decode_mac(True, False)
-        self.foo_wireshark_connector_0 = foo.wireshark_connector(127, False)
+        self.ieee802_11_decode_mac_0 = ieee802_11.decode_mac(False, False)
+        self.foo_wireshark_connector_0 = foo.wireshark_connector(127, True)
         self.fir_filter_xxx_0_0 = filter.fir_filter_fff(1, [1]*window_size)
         self.fir_filter_xxx_0_0.declare_sample_delay(0)
         self.fir_filter_xxx_0 = filter.fir_filter_ccc(1, [1]*window_size)
@@ -142,8 +140,10 @@ class frame_detection(gr.top_block, Qt.QWidget):
         self.fft_vxx_0 = fft.fft_vcc(64, True, window.rectangular(64), True, 1)
         self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, 64)
         self.blocks_multiply_xx_0 = blocks.multiply_vcc(1)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample3_20MHz_Channel100.bin', False, 0, 0)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample1_20MHz_Channel36.bin', False, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
+        self.blocks_file_sink_1 = blocks.file_sink(gr.sizeof_char*1, '/tmp/live_capture.pcap', False)
+        self.blocks_file_sink_1.set_unbuffered(True)
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/home/dcastro/projeto_cdig/captures/captura1.pcap', False)
         self.blocks_file_sink_0.set_unbuffered(False)
         self.blocks_divide_xx_0 = blocks.divide_ff(1)
@@ -159,7 +159,6 @@ class frame_detection(gr.top_block, Qt.QWidget):
         ##################################################
         self.msg_connect((self.ieee802_11_decode_mac_0, 'out'), (self.ieee802_11_parse_mac_0, 'in'))
         self.msg_connect((self.ieee802_11_parse_mac_0, 'out'), (self.foo_wireshark_connector_0, 'in'))
-        self.msg_connect((self.ieee802_11_parse_mac_0, 'out'), (self.network_socket_pdu_0, 'pdus'))
         self.connect((self.blocks_complex_to_mag_0, 0), (self.blocks_divide_xx_0, 0))
         self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.fir_filter_xxx_0_0, 0))
         self.connect((self.blocks_conjugate_cc_0, 0), (self.blocks_multiply_xx_0, 0))
@@ -178,6 +177,7 @@ class frame_detection(gr.top_block, Qt.QWidget):
         self.connect((self.fir_filter_xxx_0, 0), (self.ieee802_11_sync_short_0, 1))
         self.connect((self.fir_filter_xxx_0_0, 0), (self.blocks_divide_xx_0, 1))
         self.connect((self.foo_wireshark_connector_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.foo_wireshark_connector_0, 0), (self.blocks_file_sink_1, 0))
         self.connect((self.ieee802_11_frame_equalizer_0, 0), (self.ieee802_11_decode_mac_0, 0))
         self.connect((self.ieee802_11_sync_long_0, 0), (self.blocks_stream_to_vector_0, 0))
         self.connect((self.ieee802_11_sync_short_0, 0), (self.blocks_delay_1, 0))

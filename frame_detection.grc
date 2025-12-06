@@ -219,7 +219,25 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1264, 748.0]
+    coordinate: [1264, 684.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_1
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: ''
+    file: /tmp/live_capture.pcap
+    type: byte
+    unbuffered: 'True'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1264, 772.0]
     rotation: 0
     state: enabled
 - name: blocks_file_source_0
@@ -229,7 +247,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: /home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample3_20MHz_Channel100.bin
+    file: /home/dcastro/projeto_cdig/Wifi_Project_Baseband_recordings/Sample1_20MHz_Channel36.bin
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -363,7 +381,7 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    debug: 'False'
+    debug: 'True'
     maxoutbuf: '0'
     minoutbuf: '0'
     tech: '127'
@@ -381,7 +399,7 @@ blocks:
     alias: ''
     comment: ''
     debug: 'False'
-    log: 'True'
+    log: 'False'
     maxoutbuf: '0'
     minoutbuf: '0'
   states:
@@ -502,20 +520,20 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    host: ''
+    host: 172.24.64.1
     maxoutbuf: '0'
     minoutbuf: '0'
     mtu: '10000'
     port: '52001'
     tcp_no_delay: 'False'
-    type: TCP_SERVER
+    type: UDP_CLIENT
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
     coordinate: [1056, 636.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: qtgui_const_sink_x_0
   id: qtgui_const_sink_x
   parameters:
@@ -799,7 +817,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1232, 580.0]
+    coordinate: [1288, 548.0]
     rotation: 0
     state: disabled
 - name: qtgui_waterfall_sink_x_0
@@ -885,6 +903,7 @@ connections:
 - [fir_filter_xxx_0, '0', ieee802_11_sync_short_0, '1']
 - [fir_filter_xxx_0_0, '0', blocks_divide_xx_0, '1']
 - [foo_wireshark_connector_0, '0', blocks_file_sink_0, '0']
+- [foo_wireshark_connector_0, '0', blocks_file_sink_1, '0']
 - [ieee802_11_decode_mac_0, out, ieee802_11_parse_mac_0, in]
 - [ieee802_11_frame_equalizer_0, '0', ieee802_11_decode_mac_0, '0']
 - [ieee802_11_frame_equalizer_0, symbols, qtgui_const_sink_x_0, in]
